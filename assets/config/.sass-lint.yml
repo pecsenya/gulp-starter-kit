@@ -1,0 +1,74 @@
+options:
+  formatter: stylish
+
+rules:
+  # Extends
+  extends-before-mixins: 1
+  extends-before-declarations: 1
+  placeholder-in-extend: 0
+
+  # Mixins
+  mixins-before-declarations: 1
+
+  # Line spacing
+  one-declaration-per-line: 1
+  empty-line-between-blocks: 1
+
+  # Nesting
+  declarations-before-nesting: 1
+  force-attribute-nesting: 0
+  force-element-nesting: 0
+  forse-pseudo-nesting: 0
+
+  # Names
+  function-name-format:
+    - 1
+    - allow-leading-underscore: false
+  mixin-name-format:
+    - 1
+    - allow-leading-underscore: false
+  
+
+  # Disallows
+  no-ids: 1
+  no-duplicate-properties: 1
+  no-empty-rulesets: 1
+  no-extends: 0
+  no-important: 1
+  no-misspelled-properties: 1
+  no-trailing-zero: 1
+  no-transition-all: 0
+
+  # Style helpers
+  attribute-quotes: 1
+  bem-depth: 0
+  border-zero: 1
+  empty-args: 0
+  hex-length: 
+    - 1
+    - style: short
+  hex-notation:
+    - 1
+    - style: lowercase
+  indentation:
+    - 2
+    - size: tab
+  leading-zero: 0
+  nesting-depth:
+    - 1
+    - max-depth: 4
+  quotes:
+    - 1
+    - style: single
+  url-quotes: 1
+
+  # Spaces
+  space-after-comma: 1
+  space-before-colon: 0
+  space-after-colon: 1
+  space-between-parens: 1
+  space-around-operator: 1
+
+  # Finals
+  trailing-semicolon: 1
+  final-newline: 1

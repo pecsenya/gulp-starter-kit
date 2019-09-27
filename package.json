@@ -1,0 +1,14 @@
+{
+  "name": "nonogram",
+  "version": "1.0.0",
+  "description": "nonogram",
+  "author": "Pecsenya Anett",
+  "license": "ISC",
+  "devDependencies": {
+    "gulp": "^4.0.2",
+    "gulp-cli": "^2.2.0",
+    "gulp-sass": "^4.0.2",
+    "gulp-sass-lint": "^1.4.0",
+    "gulp-sourcemaps": "^2.6.5"
+  }
+}
