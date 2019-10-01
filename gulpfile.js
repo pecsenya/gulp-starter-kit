@@ -23,6 +23,42 @@ console.log('💥                                   💥');
 console.log('💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥\n');
 
 
+/************************/
+/*****  CUSTOM LOG  *****/
+/************************/
+
+function customCmdLog(msg, type) {
+    var emoji = '💥';
+
+    switch (type) {
+        case 'clean':           
+            emoji = '🗑'
+            break;
+        
+        case 'css': 
+            emoji = '🎨';
+            break;
+
+        case 'js':
+            emoji = '✨';
+            break;
+
+        case 'img':
+            emoji = '🖼';
+            break;
+    
+        default:
+            break;
+    }
+
+    console.log('\n', '\x1b[91m', emoji + '   ' + msg, '\x1b[0m', '\n'); 
+}
+
+
+/********************************/
+/*****  PREPARE GULP TASKS  *****/
+/********************************/
+
 // Check SCSS files
 function lint() {
     return src('assets/_src/scss/**/*.scss')
@@ -41,6 +77,8 @@ function jsLint() {
 
 // Compile only JS files - prod
 function buildJS() {
+    customCmdLog('~ Compile, uglify & update JS for PROD ~', 'js');
+
     return src('assets/_src/js/*.js')
         .pipe(concat('main.js'))
         .pipe(uglify())
@@ -49,6 +87,8 @@ function buildJS() {
 
 // Compile only SCSS files - prod
 function buildCss() {
+    customCmdLog('~ Compile & update CSS for PROD ~', 'css');
+
     return src('assets/_src/scss/**/*.scss')
         .pipe(sass({outputStyle: 'compressed'}).on('error', sass.logError))
         .pipe(autoprefix())
@@ -57,6 +97,8 @@ function buildCss() {
 
 // Compile JS files - dev
 function devJS() {
+    customCmdLog('~ Compile, update & create sourcemaps JS for DEV ~', 'js');
+
     return src('assets/_src/js/*.js')
         .pipe(sourcemap.init())
         .pipe(concat('main.js'))
@@ -66,6 +108,8 @@ function devJS() {
 
 // Compile SCSS files - dev
 function devCss() {
+    customCmdLog('~ Compile, update & create sourcemaps CSS for PROD ~', 'css');
+
     return src('assets/_src/scss/**/*.scss')
         .pipe(sourcemap.init())
         .pipe(sass().on('error', sass.logError))
@@ -75,6 +119,8 @@ function devCss() {
 
 // Compress images
 function compressImages() {
+    customCmdLog('~ Compress images ~', 'img');
+
     return src('assets/_src/img/**/*')
         .pipe(imagemin([
             imagemin.jpegtran({progressive: true}),
@@ -89,9 +135,15 @@ function compressImages() {
         .pipe(dest('assets/img'));
 }
 
-//exports.watch = function() {
-//    return series(devJS, devCss);
-//}
+function watchChanges() {
+    // Live reload
+    watch(src('content/**/*')).on('change', reload);
+    watch(src('assets/_src/**/*')).on('change', reload);
+
+    watch(src('assets/_src/scss/**/*.scss'), devCss);
+    watch(src('assets/_src/js/*.js'), devJS);
+    watch(src('assets/_src/img/**/*'), compressImages);
+}
 
 // Default GULP task
 exports.default = function() {
@@ -106,4 +158,4 @@ exports.css = buildCss;
 exports.img = compressImages;
 exports.build = series(buildJS, buildCss, compressImages);
 exports.dev = series(lint, jsLint, devJS, devCss);
-exports.watch = series(devJS, devCss);
+exports.watch = series(devJS, devCss, compressImages);
