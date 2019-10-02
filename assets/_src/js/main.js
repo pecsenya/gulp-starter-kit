@@ -1,8 +1,8 @@
 (function() {
-    console.log(alma());
+    console.log(korte('ss'));
 
-    function alma() {
-        return 'gyumi';
+    function korte(param) {
+        return param;
     }
-
+    
 })()
