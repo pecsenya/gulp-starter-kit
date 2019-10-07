@@ -9,22 +9,22 @@ const autoprefix = require('gulp-autoprefixer');
 const concat = require('gulp-concat');
 const uglify = require('gulp-uglify');
 const imagemin = require('gulp-imagemin');
+const gulpif = require('gulp-if');
 const browserSync = require('browser-sync').create();
-//var reload = browserSync.reload;
+//var reload = browserSync.reload();
 
 // PROJECT'S DATA
-
 const proxy = 'localhost:3000';
 const sassConfig = 'assets/config/.sass-lint.yml';
 const jsConfig = 'assets/config/.eslintrc';
 const source = 'assets/_src';
 
-
-console.log('\n💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥');
-console.log('💥                                   💥');
-console.log('💥            START GULP              💥');
-console.log('💥                                   💥');
-console.log('💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥\n');
+console.log('\n');
+console.log('\x1b[31m', '💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥', '\x1b[0m');
+console.log('\x1b[31m', '💥                                  💥', '\x1b[0m');
+console.log('\x1b[31m', '💥        ', '\x1b[0m', '\x1b[93m', 'START GULP', '\x1b[0m', '\x1b[31m', '         💥', '\x1b[0m');
+console.log('\x1b[31m', '💥                                  💥', '\x1b[0m');
+console.log('\x1b[31m', '💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥💥', '\x1b[0m', '\n');
 
 
 /************************/
@@ -57,10 +57,27 @@ function customCmdLog(msg, type) {
     console.log('\n', '\x1b[91m', emoji + '   ' + msg, '\x1b[0m', '\n'); 
 }
 
-
 /********************************/
 /*****  PREPARE GULP TASKS  *****/
 /********************************/
+
+
+function serve() {
+    browserSync.init({
+        watch: true,
+        server: {
+            proxy: proxy,
+            baseDir: './'
+        },
+        files: [
+            './assets/css/*.css',
+            './assets/js/*.js'
+        ]
+    });
+
+    watch('assets/_src/scss/*.scss', devCss);
+    watch('./*.html').on('change', browserSync.reload);
+}
 
 // Check SCSS files
 function lint() {
@@ -106,10 +123,7 @@ function devJS() {
         .pipe(sourcemap.init())
         .pipe(concat('main.js'))
         .pipe(sourcemap.write())
-        .pipe(dest('assets/js'))
-        .pipe(browserSync.stream({
-            match: '**/*.js'
-        }));
+        .pipe(dest('assets/js'));
 }
 
 // Compile SCSS files - dev
@@ -121,9 +135,7 @@ function devCss() {
         .pipe(sass().on('error', sass.logError))
         .pipe(sourcemap.write())
         .pipe(dest('assets/css'))
-        .pipe(browserSync.stream({
-            match: '**/*.css'
-        }));
+        .pipe(browserSync.stream());
 }
 
 // Compress images
@@ -144,14 +156,6 @@ function compressImages() {
         .pipe(dest('assets/img'));
 }
 
-exports.watch = function () {
-    browserSync.init({
-        proxy: proxy
-    });
-
-    watch('assets/_src/scss/**/*.scss', devCss);
-    watch('assets/css/*.css').on('change', browserSync.reload);
-}
 
 // Default GULP task
 exports.default = function() {
@@ -164,5 +168,6 @@ exports.jslint = jsLint;
 exports.js = buildJS;
 exports.css = buildCss;
 exports.img = compressImages;
+exports.watch = serve;
 exports.build = series(buildJS, buildCss, compressImages);
 exports.dev = series(lint, jsLint, devJS, devCss);
