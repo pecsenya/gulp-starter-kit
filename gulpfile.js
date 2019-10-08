@@ -1,6 +1,6 @@
 'use strict';
 
-const {src, dest, watch, series} = require('gulp');
+const gulp = require('gulp');
 const sass = require('gulp-sass');
 const sassLint = require('gulp-sass-lint');
 const esLint = require('gulp-eslint');
@@ -9,12 +9,13 @@ const autoprefix = require('gulp-autoprefixer');
 const concat = require('gulp-concat');
 const uglify = require('gulp-uglify');
 const imagemin = require('gulp-imagemin');
+const newer = require('gulp-newer');
 const gulpif = require('gulp-if');
 const browserSync = require('browser-sync').create();
 //var reload = browserSync.reload();
 
 // PROJECT'S DATA
-const proxy = 'localhost:3000';
+const proxy = 'nonogram.local';
 const sassConfig = 'assets/config/.sass-lint.yml';
 const jsConfig = 'assets/config/.eslintrc';
 const source = 'assets/_src';
@@ -50,6 +51,8 @@ function customCmdLog(msg, type) {
         case 'reload':
             emoji = '⚔';
             break;
+        case 'start':
+            emoji = '🔫';
         default:
             break;
     }
@@ -61,27 +64,26 @@ function customCmdLog(msg, type) {
 /*****  PREPARE GULP TASKS  *****/
 /********************************/
 
+function sync(done) {
+    customCmdLog('~ Start syncing ~', 'start');
 
-function serve() {
     browserSync.init({
-        watch: true,
-        server: {
-            proxy: proxy,
-            baseDir: './'
-        },
-        files: [
-            './assets/css/*.css',
-            './assets/js/*.js'
-        ]
+        proxy: proxy,
+        baseDir: './'
     });
+    done();
+}
 
-    watch('assets/_src/scss/*.scss', devCss);
-    watch('./*.html').on('change', browserSync.reload);
+function reload(done) {
+    customCmdLog('~ Reload page ~', 'reload');
+
+    browserSync.reload();
+    done();
 }
 
 // Check SCSS files
 function lint() {
-    return src(source + '/scss/**/*.scss')
+    return gulp.src(source + '/scss/**/*.scss')
         .pipe(sassLint({configFile: sassConfig}))
         .pipe(sassLint.format())
         .pipe(sassLint.failOnError());
@@ -89,7 +91,7 @@ function lint() {
 
 // Check JS files
 function jsLint() {
-    return src(source + '/js/*.js')
+    return gulp.src(source + '/js/*.js')
         .pipe(esLint({configFile: jsConfig}))
         .pipe(esLint.format())
         .pipe(esLint.failAfterError())
@@ -99,75 +101,82 @@ function jsLint() {
 function buildJS() {
     customCmdLog('~ Compile, uglify & update JS for PROD ~', 'js');
 
-    return src(source + '/js/*.js')
+    return gulp.src(source + '/js/*.js')
+        .pipe(newer('assets/js'))
         .pipe(concat('main.js'))
         .pipe(uglify())
-        .pipe(dest('assets/js'));
+        .pipe(gulp.dest('assets/js'));
 };
 
 // Compile only SCSS files - prod
 function buildCss() {
     customCmdLog('~ Compile & update CSS for PROD ~', 'css');
 
-    return src(source + '/scss/**/*.scss')
+    return gulp.src(source + '/scss/**/*.scss')
+        .pipe(newer('assets/css'))
         .pipe(sass({outputStyle: 'compressed'}).on('error', sass.logError))
         .pipe(autoprefix())
-        .pipe(dest('assets/css'));
+        .pipe(gulp.dest('assets/css'));
 }
 
 // Compile JS files - dev
 function devJS() {
     customCmdLog('~ Compile, update & create sourcemaps JS for DEV ~', 'js');
 
-    return src(source + '/js/*.js')
+    return gulp.src(source + '/js/*.js')
+        .pipe(newer('assets/js'))
         .pipe(sourcemap.init())
         .pipe(concat('main.js'))
         .pipe(sourcemap.write())
-        .pipe(dest('assets/js'));
+        .pipe(gulp.dest('assets/js'));
 }
 
 // Compile SCSS files - dev
 function devCss() {
     customCmdLog('~ Compile, update & create sourcemaps CSS for DEV ~', 'css');
 
-    return src(source + '/scss/**/*.scss')
+    return gulp.src(source + '/scss/**/*.scss')
+        .pipe(newer('assets/css'))
         .pipe(sourcemap.init())
         .pipe(sass().on('error', sass.logError))
         .pipe(sourcemap.write())
-        .pipe(dest('assets/css'))
-        .pipe(browserSync.stream());
+        .pipe(gulp.dest('assets/css'))
+        .pipe(browserSync.stream({match: '**/*.css'}));
 }
 
 // Compress images
 function compressImages() {
     customCmdLog('~ Compress images ~', 'img');
 
-    return src(source + '/img/**/*')
+    return gulp.src(source + '/img/**/*')
         .pipe(imagemin([
             imagemin.jpegtran({progressive: true}),
             imagemin.optipng({optimizationLevel: 5}),
             imagemin.svgo({
-                plugins: [
-                    {removeViewBox: true},
-                    {cleanupIDs: false}
-                ]
+                plugins: [{
+                    removeViewBox: true,
+                    cleanupIDs: false,
+                    collapseGroups: true
+                }]
             })
         ]))
-        .pipe(dest('assets/img'));
+        .pipe(gulp.dest('assets/img'));
+}
+
+function watch() {
+    gulp.watch('./assets/_src/scss/**/*.scss', devCss);
+    gulp.watch('./template/layout/**/*', reload);
 }
 
 
 // Default GULP task
-exports.default = function() {
-    return src(source + '/js/*.js')
-        .pipe(dest('assets/js'));
-};
+exports.default = function() {};
 
 exports.lint = lint;
 exports.jslint = jsLint;
 exports.js = buildJS;
 exports.css = buildCss;
 exports.img = compressImages;
-exports.watch = serve;
-exports.build = series(buildJS, buildCss, compressImages);
-exports.dev = series(lint, jsLint, devJS, devCss);
+exports.watch = gulp.parallel(watch, sync);
+exports.build = gulp.series(buildJS, buildCss, compressImages);
+exports.dev = gulp.series(lint, jsLint, devJS, devCss);
