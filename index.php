@@ -11,5 +11,7 @@
 </head>
 <body>
     <h1 class="asdf">asd</h1>
+
+    <?php require_once('template/layout/layout.php') ?>
 </body>
 </html>
